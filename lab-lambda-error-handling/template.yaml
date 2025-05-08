@@ -1,0 +1,73 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+
+Resources:
+  DLQTestLambda:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: dlqTest
+      Runtime: nodejs22.x
+      Handler: app.lambdaHandler
+      CodeUri: dlq-test/
+      MemorySize: 128
+      Timeout: 2
+      Role: !GetAtt LambdaExecutionRole.Arn
+      Events:
+        SnsTrigger:
+          Type: SNS
+          Properties:
+            Topic: !Ref LambdaTriggerTopic
+      DeadLetterQueue:
+        Type: SQS
+        TargetArn: !GetAtt LambdaDLQ.Arn
+      EventInvokeConfig:
+        MaximumRetryAttempts: 2
+        DestinationConfig:
+          OnFailure:
+            Type: SNS
+            Destination: !Ref FailureSNSTopic
+
+  LambdaDLQ:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: Lambda-DLQ
+
+  FailureSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Lambda-Failure-Notifications
+
+  LambdaTriggerTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: Lambda-Trigger
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: LambdaExecutionPolicy
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                Resource: arn:aws:logs:*:*:*
+              - Effect: Allow
+                Action:
+                  - sqs:SendMessage
+                Resource: !GetAtt LambdaDLQ.Arn
+              - Effect: Allow
+                Action:
+                  - sns:Publish
+                Resource: !Ref FailureSNSTopic
