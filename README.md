@@ -1,7 +1,7 @@
 # lab-lambda-error-handling
 AWS Serverless
 
-Implementd error handling using AWS Lambda’s built-in retry behavior, Dead Letter Queues (DLQs), and AWS Lambda Destinations. Created a Lambda function that intentionally fails to simulate real-world error scenarios. Configure an Amazon SQS queue as a DLQ to capture failed event payloads and an Amazon SNS topic to send failure notifications. Set up on-failure destinations to route failed executions to the SNS topic. Tested the retry behavior and verified that failed events are correctly routed to the DLQ and SNS.
+Implementd error handling using AWS Lambda’s built-in retry behavior, Dead Letter Queues (DLQs), and AWS Lambda Destinations. Created a Lambda function that intentionally fails to simulate real-world error scenarios. Configured an Amazon SQS queue as a DLQ to capture failed event payloads and an Amazon SNS topic to send failure notifications. Set up on-failure destinations to route failed executions to the SNS topic. Tested the retry behavior and verified that failed events are correctly routed to the DLQ and SNS. Analyze CloudWatch logs to track Lambda execution failures and retries
 
 Background - When a Lambda function fails, handling the failed events efficiently is crucial. Two primary mechanisms for error handling in asynchronous invocations:
 
